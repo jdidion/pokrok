@@ -21,6 +21,10 @@ setup(
     description='Simple API for progress bars using any of several supported libraries',
     license='MIT',
     packages=find_packages(),
+    install_requires=[
+        'importlib-metadata; python_version<"3.8"',
+        'importlib-resources; python_version<"3.7"',
+    ],
     tests_require=['pytest'],  # , 'jinja2', 'pysam'],
     entry_points={
         'pokrok': [

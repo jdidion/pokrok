@@ -14,6 +14,10 @@ choose whether or not to use those arguments.
 
 """
 from collections.abc import Sized
+try:
+    import importlib.resources as importlib_resources
+except ImportError:
+    import importlib_resources
 import json
 import math
 import os
@@ -59,9 +63,10 @@ class ProgressFactory:
             else:
                 try:
                     package, path = filename.split(':')
-                    import pkg_resources as pr
-                    if pr.resource_exists(package, path):
-                        config = json.load(pr.resource_stream(package, path))
+                    if importlib_resources.is_resource(package, path):
+                        config = json.loads(
+                            importlib_resources.read_text(package, path)
+                        )
                 except:
                     pass
             if config is None:
