@@ -2,9 +2,11 @@ from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 import enum
 import importlib
+try:
+    from importlib.metadata import entry_points
+except ImportError:
+    from importlib_metadata import entry_points
 from typing import Iterable, Optional
-
-from pkg_resources import iter_entry_points
 
 
 # ProgressMeter statuses
@@ -29,7 +31,7 @@ class PluginManager:
         # Load the factory classes from the discovered entry points
         plugin_types = dict(
             (entry_point.name, entry_point.load())
-            for entry_point in iter_entry_points(group="pokrok")
+            for entry_point in entry_points(group="pokrok")
         )
 
         # Filter and order if names are provided
