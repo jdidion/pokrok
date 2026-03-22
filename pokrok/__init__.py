@@ -26,9 +26,12 @@ import pokrok.plugins
 import pokrok.styles
 from pokrok.styles import Style, Widget
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version(__name__)
+except PackageNotFoundError:
+    __version__ = "Unknown"
 
 
 class ProgressFactory:

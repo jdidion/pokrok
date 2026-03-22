@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pokrok"
+version = "0.2.1"
+description = "Simple API for progress bars using any of several supported libraries"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "John Didion", email = "johndidion@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: User Interfaces",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/jdidion/pokrok"
+
+[project.entry-points.pokrok]
+tqdm = "pokrok.plugins.tqdm:TqdmProgressMeterFactory"
+progressbar2 = "pokrok.plugins.progressbar2:Progressbar2ProgressMeterFactory"
+halo = "pokrok.plugins.halo:HaloProgressMeterFactory"
+logging = "pokrok.plugins.logging:LoggingProgressMeterFactory"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["pokrok*"]
