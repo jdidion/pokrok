@@ -3,3 +3,5 @@ dist/
 pokrok.egg-info/
 __pycache__/
 .idea/
+# oh-my-claudecode scratch
+.omc/
