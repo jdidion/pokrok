@@ -13,25 +13,37 @@ choose whether or not to use those arguments.
 * plugin_name: Name of a specific plugin to use.
 
 """
-from collections.abc import Sized
-try:
-    import importlib.resources as importlib_resources
-except ImportError:
-    import importlib_resources
+
+import importlib.resources as importlib_resources
 import json
 import math
 import os
+from collections.abc import Sized
+from importlib.metadata import PackageNotFoundError, version
 
 import pokrok.plugins
 import pokrok.styles
 from pokrok.styles import Style, Widget
 
-from importlib.metadata import version, PackageNotFoundError
-
 try:
-    __version__ = version(__name__)
+    __version__ = version("pokrok")
 except PackageNotFoundError:
     __version__ = "Unknown"
+
+
+__all__ = [
+    "Style",
+    "Widget",
+    "ProgressFactory",
+    "FACTORY",
+    "set_plugins",
+    "set_styles",
+    "configure",
+    "progress_range",
+    "progress_file",
+    "progress_iter",
+    "progress_meter",
+]
 
 
 class ProgressFactory:
@@ -43,15 +55,13 @@ class ProgressFactory:
     @property
     def default_paths(self):
         return [
-            os.path.join(path, 'pokrok.json')
-            for path in (
-                os.getcwd(),
-                os.path.abspath(os.path.expanduser('~')))
+            os.path.join(path, "pokrok.json")
+            for path in (os.getcwd(), os.path.abspath(os.path.expanduser("~")))
         ]
 
     def configure(
-            self, filename=None, plugin_names=None, exclusive=False,
-            styles=None, **kwargs):
+        self, filename=None, plugin_names=None, exclusive=False, styles=None, **kwargs
+    ):
         if not (filename or self.configured):
             for fname in self.default_paths:
                 if os.path.exists(fname):
@@ -61,19 +71,18 @@ class ProgressFactory:
         if filename:
             config = None
             if os.path.exists(filename):
-                with open(filename, 'rt') as inp:
+                with open(filename) as inp:
                     config = json.load(inp)
             else:
                 try:
-                    package, path = filename.split(':')
-                    if importlib_resources.is_resource(package, path):
-                        config = json.loads(
-                            importlib_resources.read_text(package, path)
-                        )
-                except:
+                    package, path = filename.split(":")
+                    resource = importlib_resources.files(package).joinpath(path)
+                    if resource.is_file():
+                        config = json.loads(resource.read_text())
+                except Exception:
                     pass
             if config is None:
-                raise ValueError("File not found: {}".format(filename))
+                raise ValueError(f"File not found: {filename}")
             self.plugins.set_plugin_options(config)
             self.styles.set_style_options(config)
             self.configured = True
@@ -86,8 +95,8 @@ class ProgressFactory:
             self.styles.update(**styles)
 
     def create(
-            self, iterable=None, size=None, style='default', plugin_name=None,
-            **kwargs):
+        self, iterable=None, size=None, style="default", plugin_name=None, **kwargs
+    ):
         """Create a progress meter. All parameters are optional. The default
         behavior (i.e. when just calling `create()`) is to return an unsized
         ProgressMeter with default style.
@@ -119,19 +128,18 @@ class ProgressFactory:
 
         if plugin_name:
             if not self.plugins.has_plugin(plugin_name):
-                raise ValueError(
-                    "Plugin {} is not supported".format(plugin_name))
+                raise ValueError(f"Plugin {plugin_name} is not supported")
             plugin = self.plugins.get_plugin(plugin_name)
             if not plugin.provides(sized, widgets, force=True):
                 raise ValueError(
-                    "Plugin {} does not support the requested configuration "
-                    "(sized={}, style={})".format(plugin_name, sized, widgets))
+                    f"Plugin {plugin_name} does not support the requested "
+                    f"configuration (sized={sized}, style={widgets})"
+                )
         else:
             plugin = self.plugins.get_first_plugin(sized, widgets)
 
         if plugin and iterable:
-            return plugin.iterate(
-                iterable, size=size, widgets=widgets, **kwargs)
+            return plugin.iterate(iterable, size=size, widgets=widgets, **kwargs)
         elif plugin:
             return plugin.create(size=size, widgets=widgets, **kwargs)
         elif iterable:

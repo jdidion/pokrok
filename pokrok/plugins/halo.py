@@ -1,18 +1,25 @@
-from pokrok.plugins import DefaultProgressMeterFactory, BaseProgressMeter
+from pokrok.plugins import BaseProgressMeter, DefaultProgressMeterFactory
 from pokrok.styles import Style, Widget
 
 
 class HaloProgressMeterFactory(DefaultProgressMeterFactory):
     def __init__(self):
         style_superset = Style(unsized=[Widget.SPINNER])
-        super().__init__('halo', HaloProgressMeter, style_superset)
+        super().__init__("halo", HaloProgressMeter, style_superset)
 
     def iterate(
-            self, iterable, size=None, widgets=None, desc=None, start=None, unit=None,
-            multiplier=None, **kwargs
+        self,
+        iterable,
+        size=None,
+        widgets=None,
+        desc=None,
+        start=None,
+        unit=None,
+        multiplier=None,
+        **kwargs,
     ):
         if self._load_module():
-            with self._module.Halo(text=desc or ''):
+            with self._module.Halo(text=desc or ""):
                 yield from iterable
         else:
             yield from iterable
@@ -31,7 +38,7 @@ class HaloProgressMeterFactory(DefaultProgressMeterFactory):
 class HaloProgressMeter(BaseProgressMeter):
     def __init__(self, mod, size, widgets, desc, start, unit, multiplier, **kwargs):
         super().__init__(size)
-        self.spinner = mod.Halo(text=desc or '')
+        self.spinner = mod.Halo(text=desc or "")
 
     def start(self):
         super().start()

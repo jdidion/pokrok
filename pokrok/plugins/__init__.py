@@ -1,12 +1,9 @@
-from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
 import enum
 import importlib
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points
-from typing import Iterable, Optional
+from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
+from collections.abc import Iterable
+from importlib.metadata import entry_points
 
 
 # ProgressMeter statuses
@@ -60,7 +57,7 @@ class PluginManager:
 
     def get_plugin(self, name):
         if not self.has_plugin(name):
-            raise ValueError("No such plugin: {}".format(name))
+            raise ValueError(f"No such plugin: {name}")
         return self.plugins[name]
 
     def get_first_plugin(self, sized=None, widgets=None):
@@ -151,7 +148,7 @@ class ProgressMeterFactory(metaclass=ABCMeta):
         start=None,
         unit=None,
         multiplier=None,
-        **kwargs
+        **kwargs,
     ):
         """
         Creates a progress meter that conforms to the requested style.
@@ -176,13 +173,13 @@ class ProgressMeterFactory(metaclass=ABCMeta):
     def iterate(
         self,
         iterable: Iterable,
-        size: Optional[int] = None,
+        size: int | None = None,
         widgets=None,
-        desc: Optional[str] = None,
-        start: Optional[int] = None,
-        unit: Optional[str] = None,
-        multiplier: Optional[int] = None,
-        **kwargs
+        desc: str | None = None,
+        start: int | None = None,
+        unit: str | None = None,
+        multiplier: int | None = None,
+        **kwargs,
     ):
         """
         Wraps an iterable with a progress meter.
@@ -242,13 +239,13 @@ class BaseProgressMeterFactory(ProgressMeterFactory, metaclass=ABCMeta):
     def iterate(
         self,
         iterable: Iterable,
-        size: Optional[int] = None,
+        size: int | None = None,
         widgets=None,
         desc=None,
         start=None,
         unit=None,
         multiplier=None,
-        **kwargs
+        **kwargs,
     ):
         pbar = self.create(size, widgets, desc, start, unit, multiplier, **kwargs)
         if pbar:
@@ -257,7 +254,11 @@ class BaseProgressMeterFactory(ProgressMeterFactory, metaclass=ABCMeta):
                     yield item
                     pbar.increment()
         else:
-            return iterable
+            # No meter could be created: pass the items through unchanged.
+            # This method is a generator (it `yield`s above), so a bare
+            # `return iterable` would silently yield nothing; yield from the
+            # iterable instead so the documented pass-through behavior holds.
+            yield from iterable
 
 
 class DefaultProgressMeterFactory(BaseProgressMeterFactory):
@@ -306,7 +307,7 @@ class DefaultProgressMeterFactory(BaseProgressMeterFactory):
         start=None,
         unit=None,
         multiplier=None,
-        **kwargs
+        **kwargs,
     ):
         if self._load_module():
             return self._progress_meter_class(
@@ -317,7 +318,7 @@ class DefaultProgressMeterFactory(BaseProgressMeterFactory):
                 start=start,
                 unit=unit,
                 multiplier=multiplier,
-                **kwargs
+                **kwargs,
             )
 
     def _load_module(self):
@@ -330,8 +331,7 @@ class DefaultProgressMeterFactory(BaseProgressMeterFactory):
 
 
 class ProgressMeter(metaclass=ABCMeta):
-    """ProgressMeter interface to be implemented by the plugin.
-    """
+    """ProgressMeter interface to be implemented by the plugin."""
 
     def __enter__(self):
         self.start()
@@ -353,12 +353,11 @@ class ProgressMeter(metaclass=ABCMeta):
         """
         pass
 
-    def start(self):
-        """Initialize and show the progress meter.
-        """
+    def start(self):  # noqa: B027 - optional override, default is a no-op
+        """Initialize and show the progress meter."""
         pass
 
-    def finish(self):
+    def finish(self):  # noqa: B027 - optional override, default is a no-op
         """Signal that the task is complete. The progress meter should update
         its display accordingly (if applicable).
         """
@@ -397,8 +396,8 @@ class ProgressMeter(metaclass=ABCMeta):
         if self.status != status:
             if error:
                 raise ProgressMeterError(
-                    "The ProgressMeter status {} differs from expected status "
-                    "{}".format(self.status, status)
+                    f"The ProgressMeter status {self.status} differs from "
+                    f"expected status {status}"
                 )
             else:
                 return False
