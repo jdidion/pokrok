@@ -1,4 +1,0 @@
-include versioneer.py
-include pokrok/_version.py
-include README.md
-include LICENSE

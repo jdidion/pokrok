@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pokrok"
+description = "Simple API for progress bars using any of several supported libraries"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "John Didion", email = "johndidion@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: User Interfaces",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/jdidion/pokrok"
+
+[project.entry-points.pokrok]
+tqdm = "pokrok.plugins.tqdm:TqdmProgressMeterFactory"
+progressbar2 = "pokrok.plugins.progressbar2:Progressbar2ProgressMeterFactory"
+halo = "pokrok.plugins.halo:HaloProgressMeterFactory"
+logging = "pokrok.plugins.logging:LoggingProgressMeterFactory"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "ruff>=0.6",
+    "tqdm>=4",
+    "progressbar2>=4",
+    "halo>=0.0.31",
+]
+
+[tool.setuptools.packages.find]
+include = ["pokrok*"]
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# E722 (bare except) is intentional in __init__.configure's resource fallback;
+# keep it scoped rather than silencing project-wide.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["pokrok"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@(abc\\.)?abstractmethod",
+]

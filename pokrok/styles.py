@@ -5,28 +5,29 @@ class Widget(enum.Enum):
     """Enumeration of widget types that are commonly supported across progress
     bar libraries.
     """
-    BAR = 'BAR'
-    ETA = 'ETA'
-    ELAPSED = 'ELAPSED'
-    SPINNER = 'SPINNER'
-    COUNTER = 'COUNTER'
-    PERCENT = 'PERCENT'
+
+    BAR = "BAR"
+    ETA = "ETA"
+    ELAPSED = "ELAPSED"
+    SPINNER = "SPINNER"
+    COUNTER = "COUNTER"
+    PERCENT = "PERCENT"
 
 
 class StyleManager(dict):
     def __init__(self, default_style=None):
         super().__init__()
-        self['default'] = default_style or Style()
+        self["default"] = default_style or Style()
 
     def set_style_options(self, config, **kwargs):
-        if 'styles' in config:
-            for name, style_config in config['styles'].items():
+        if "styles" in config:
+            for name, style_config in config["styles"].items():
                 self[name] = Style(**style_config)
-        if 'default_style' in config:
-            if isinstance(config['default_style'], str):
-                self['default'] = self[config['default_style']]
+        if "default_style" in config:
+            if isinstance(config["default_style"], str):
+                self["default"] = self[config["default_style"]]
             else:
-                self['default'] = Style(**config['default_style'])
+                self["default"] = Style(**config["default_style"])
 
 
 class Style:
@@ -37,6 +38,7 @@ class Style:
         sized: Widgets for sized progress meters.
         unsized: Widgets specifically for unsized progress meters.s
     """
+
     def __init__(self, widgets=None, sized=None, unsized=None):
         if widgets:
             self.sized = _resolve_widgets(sized or widgets)
@@ -52,7 +54,4 @@ class Style:
 def _resolve_widgets(widgets):
     if widgets is None:
         return None
-    return [
-        Widget[w] if isinstance(w, str) else w
-        for w in widgets
-    ]
+    return [Widget[w] if isinstance(w, str) else w for w in widgets]

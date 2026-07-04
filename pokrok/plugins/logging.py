@@ -1,9 +1,8 @@
-from datetime import datetime
 import sys
+from datetime import datetime
 
-from pokrok.plugins import DefaultProgressMeterFactory, BaseProgressMeter
+from pokrok.plugins import BaseProgressMeter, DefaultProgressMeterFactory
 from pokrok.styles import Style, Widget
-
 
 STYLE_SUPERSET = Style(
     sized=[Widget.BAR, Widget.COUNTER, Widget.PERCENT, Widget.ELAPSED],
@@ -13,7 +12,12 @@ STYLE_SUPERSET = Style(
 
 class LoggingProgressMeterFactory(DefaultProgressMeterFactory):
     def __init__(self):
-        super().__init__("Logging", LoggingProgressMeter, STYLE_SUPERSET)
+        # The plugin's public name is "Logging" but the backing module is the
+        # stdlib ``logging`` package; pass module_name explicitly so the
+        # DefaultProgressMeterFactory imports the right (lowercase) module.
+        super().__init__(
+            "Logging", LoggingProgressMeter, STYLE_SUPERSET, module_name="logging"
+        )
 
 
 class LoggingProgressMeter(BaseProgressMeter):
@@ -45,7 +49,12 @@ class LoggingProgressMeter(BaseProgressMeter):
         self._logger.setLevel(logger_level)
         if not self._logger.hasHandlers():
             self._logger.addHandler(mod.StreamHandler(sys.stderr))
-        self._level = logger_level
+        # Logger.log() requires a numeric level; logger_level may be a level
+        # name (e.g. "INFO") or an int. Normalize to an int.
+        if isinstance(logger_level, str):
+            self._level = mod.getLevelName(logger_level)
+        else:
+            self._level = logger_level
 
         self.count = start or 0
         self.size = size
@@ -73,13 +82,14 @@ class LoggingProgressMeter(BaseProgressMeter):
         for w in widgets:
             if w == Widget.COUNTER:
                 if size:
-                    for suffix in ["", "k", "M", "G", "T", "P", "E", "Z"]:
+                    suffix = ""
+                    for suffix in ["", "k", "M", "G", "T", "P", "E", "Z"]:  # noqa: B007 - suffix is read after the loop
                         if size < 1000:
                             break
                         size /= 1000
                         self._scale *= 1000
                     if suffix:
-                        message.append("{count:.2f}/" + "{:.2f}".format(size) + suffix)
+                        message.append("{count:.2f}/" + f"{size:.2f}" + suffix)
                     else:
                         message.append("{count}/" + str(size))
                 else:
@@ -89,13 +99,15 @@ class LoggingProgressMeter(BaseProgressMeter):
                 self.key_fns["count"] = lambda: self.count / self._scale
             elif w == Widget.ELAPSED:
                 message.append("{elapsed:.1f} seconds")
-                self.key_fns["elapsed"] = (
-                    lambda: datetime.now().timestamp() - self.start_time.timestamp()
+                self.key_fns["elapsed"] = lambda: (
+                    datetime.now().timestamp() - self.start_time.timestamp()
                 )
             elif w == Widget.BAR:
                 message.append("{bar}")
-                bar_fmt = "[{{: <{}}}]".format(self._bar_size)
-                self.key_fns["bar"] = lambda: bar_fmt.format(
+                bar_fmt = f"[{{: <{self._bar_size}}}]"
+                # bind bar_fmt as a default arg so the lambda captures the
+                # current value rather than the loop variable.
+                self.key_fns["bar"] = lambda bar_fmt=bar_fmt: bar_fmt.format(
                     self._bar_char * round((self.count / self.size) * self._bar_size)
                 )
             elif w == Widget.PERCENT and size is not None:

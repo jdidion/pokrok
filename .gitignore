@@ -1,7 +1,12 @@
 build/
 dist/
-pokrok.egg-info/
+*.egg-info/
 __pycache__/
 .idea/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 # oh-my-claudecode scratch
 .omc/
